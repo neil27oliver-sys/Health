@@ -73,60 +73,58 @@
             margin-bottom: 20px;
         }
 
+        /* --- FIX START: MOBILE SCROLLING --- */
         .table-container {
             border-radius: 15px;
-            overflow: hidden;
+            overflow-x: auto; /* Enable horizontal scroll */
+            overflow-y: hidden;
             border: 1px solid #e2e8f0;
             position: relative;
+            background: white;
+            -webkit-overflow-scrolling: touch; /* Smooth scroll for iOS */
         }
 
-        /* Right shadow to indicate scrollable content */
-        .table-container::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 20px;
-            height: 100%;
-            background: linear-gradient(to left, rgba(0,0,0,0.1), transparent);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .table-container.scrollable::after {
-            opacity: 1;
-        }
-
-        /* Force wide table for full horizontal scroll */
         .history-table {
-            min-width: 900px;
+            min-width: 850px; /* Ensure table is wide enough for all data */
             width: 100%;
+            margin-bottom: 0;
         }
+        /* --- FIX END --- */
 
         .history-table th,
         .history-table td {
             white-space: nowrap;
             text-align: center;
+            vertical-align: middle;
+            padding: 12px 15px;
         }
 
         @media (max-width: 768px) {
             .history-table {
                 font-size: 0.85rem;
             }
-            .history-table th,
-            .history-table td {
-                padding: 0.5rem 0.35rem;
+            .main-card {
+                padding: 1rem;
+                margin-top: 1rem;
             }
-            .delete-btn {
-                font-size: 1.2rem;
+            .scroll-hint {
+                display: block;
+                text-align: right;
+                font-size: 0.7rem;
+                color: var(--primary-green);
+                margin-bottom: 5px;
             }
+        }
+
+        @media (min-width: 769px) {
+            .scroll-hint { display: none; }
         }
 
         .table thead th {
             position: sticky;
             top: 0;
             background: #212529;
+            color: white;
             z-index: 10;
         }
 
@@ -139,6 +137,7 @@
             color: #ef4444;
             cursor: pointer;
             transition: 0.2s;
+            font-size: 1.1rem;
         }
 
         .delete-btn:hover {
@@ -153,7 +152,6 @@
     <div class="main-card">
         <h1 class="text-center">🌟 Healt <small style="font-size: 0.5em; color: #666;">v2.4</small></h1>
 
-        <!-- Stats, Form, Trends unchanged -->
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="stat-pill">
@@ -238,25 +236,24 @@
         </div>
 
         <div class="mt-5">
-            <h4 class="mb-3">📊 History</h4>
-            <div class="table-responsive">
-                <div class="table-container" id="tableContainer">
-                    <table class="table table-hover mb-0 history-table">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Date</th>
-                                <th>Sugar</th>
-                                <th>HbA1c</th>
-                                <th>BP (MAP)</th>
-                                <th>Pulse</th>
-                                <th>Weight</th>
-                                <th>O2</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="dataTable"></tbody>
-                    </table>
-                </div>
+            <h4 class="mb-1">📊 History</h4>
+            <div class="scroll-hint"><i class="bi bi-arrow-left-right"></i> Swipe to see more</div>
+            <div class="table-container" id="tableContainer">
+                <table class="table table-hover mb-0 history-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>Sugar</th>
+                            <th>HbA1c</th>
+                            <th>BP (MAP)</th>
+                            <th>Pulse</th>
+                            <th>Weight</th>
+                            <th>O2</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTable"></tbody>
+                </table>
             </div>
         </div>
 
@@ -293,7 +290,6 @@
 
     document.getElementById('date').value = today;
 
-    // Rest of your script unchanged (form, delete, charts, etc.)
     document.getElementById('healthForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const newEntry = {
@@ -340,7 +336,6 @@
         renderTable();
         renderCharts();
         updateStats();
-        updateScrollIndicator();
     }
 
     function updateStats() {
@@ -408,17 +403,6 @@
         });
     }
 
-    // Add scroll indicator class
-    function updateScrollIndicator() {
-        const container = document.querySelector('.table-responsive');
-        const tableContainer = document.getElementById('tableContainer');
-        if (container.scrollWidth > container.clientWidth) {
-            tableContainer.classList.add('scrollable');
-        } else {
-            tableContainer.classList.remove('scrollable');
-        }
-    }
-
     function loadData() {
         const data = localStorage.getItem(STORAGE_KEY);
         return data ? JSON.parse(data) : [];
@@ -430,7 +414,6 @@
 
     window.onload = function() {
         refreshUI();
-        updateScrollIndicator();
     };
 
     document.getElementById('archiveBtn').addEventListener('click', function() {
@@ -445,6 +428,7 @@
     });
 </script>
 </body>
-</html
+</html>>
+
 
 
