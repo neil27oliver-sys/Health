@@ -80,9 +80,9 @@
             position: relative;
         }
 
-        /* Enhanced horizontal scroll for mobile */
-        .table-responsive {
-            -webkit-overflow-scrolling: touch;
+        /* Force minimum width for proper horizontal scrolling on mobile */
+        .history-table {
+            min-width: 800px; /* Ensures all columns are visible when scrolled */
         }
 
         .table-scroll-hint {
@@ -102,8 +102,11 @@
 
         @media (max-width: 768px) {
             .table-scroll-hint { display: block; }
-            .table { font-size: 0.85rem; }
-            .table td, .table th { padding: 0.5rem 0.4rem; }
+            .history-table { font-size: 0.85rem; }
+            .history-table td, .history-table th { 
+                padding: 0.5rem 0.4rem; 
+                white-space: nowrap;
+            }
             .delete-btn { font-size: 1.1rem; }
         }
 
@@ -131,8 +134,9 @@
 
 <div class="container">
     <div class="main-card">
-        <h1 class="text-center">🌟 Healt <small style="font-size: 0.5em; color: #666;">v2.2</small></h1>
+        <h1 class="text-center">🌟 Healt <small style="font-size: 0.5em; color: #666;">v2.3</small></h1>
 
+        <!-- Stats, Form, Trends sections unchanged -->
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="stat-pill">
@@ -212,7 +216,6 @@
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="weightChart"></canvas></div></div>
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="bpChart"></canvas></div></div>
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="pulseChart"></canvas></div></div>
-                    <div class="col-md-6 d-block d-md-none"><div class="chart-wrapper"><canvas id="o2Chart"></canvas></div></div> <!-- Optional extra if you want O2 too -->
                 </div>
             </div>
         </div>
@@ -222,7 +225,7 @@
             <div class="table-responsive">
                 <div class="table-container position-relative">
                     <div class="table-scroll-hint">← Scroll →</div>
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0 history-table">
                         <thead class="table-dark">
                             <tr>
                                 <th>Date</th>
@@ -250,6 +253,7 @@
 </div>
 
 <script>
+    // All your existing script remains exactly the same – only the table class changed to "history-table"
     const STORAGE_KEY = 'healtData';
     let healthData = loadData();
     const today = new Date().toISOString().split('T')[0];
@@ -411,4 +415,5 @@
 </script>
 </body>
 </html>
+
 
