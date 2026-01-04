@@ -14,11 +14,11 @@
         :root {
             --primary-green: #4caf50;
             --dark-green: #2e7d32;
-            --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            --bg-grad: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         }
 
         body {
-            background: var(--bg-gradient);
+            background: var(--bg-grad);
             background-attachment: fixed;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: #1a2f1b;
@@ -80,38 +80,47 @@
             position: relative;
         }
 
-        /* Force minimum width for proper horizontal scrolling on mobile */
-        .history-table {
-            min-width: 800px; /* Ensures all columns are visible when scrolled */
+        /* Right shadow to indicate scrollable content */
+        .table-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 20px;
+            height: 100%;
+            background: linear-gradient(to left, rgba(0,0,0,0.1), transparent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        .table-scroll-hint {
-            position: absolute;
-            top: 50%;
-            right: 10px;
-            transform: translateY(-50%);
-            background: rgba(0,0,0,0.6);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            pointer-events: none;
-            opacity: 0.8;
-            z-index: 11;
+        .table-container.scrollable::after {
+            opacity: 1;
+        }
+
+        /* Force wide table for full horizontal scroll */
+        .history-table {
+            min-width: 900px;
+            width: 100%;
+        }
+
+        .history-table th,
+        .history-table td {
+            white-space: nowrap;
+            text-align: center;
         }
 
         @media (max-width: 768px) {
-            .table-scroll-hint { display: block; }
-            .history-table { font-size: 0.85rem; }
-            .history-table td, .history-table th { 
-                padding: 0.5rem 0.4rem; 
-                white-space: nowrap;
+            .history-table {
+                font-size: 0.85rem;
             }
-            .delete-btn { font-size: 1.1rem; }
-        }
-
-        @media (min-width: 769px) {
-            .table-scroll-hint { display: none; }
+            .history-table th,
+            .history-table td {
+                padding: 0.5rem 0.35rem;
+            }
+            .delete-btn {
+                font-size: 1.2rem;
+            }
         }
 
         .table thead th {
@@ -126,17 +135,25 @@
             border-left: 5px solid var(--primary-green);
         }
 
-        .delete-btn { color: #ef4444; cursor: pointer; transition: 0.2s; }
-        .delete-btn:hover { color: #b91c1c; transform: scale(1.2); }
+        .delete-btn {
+            color: #ef4444;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .delete-btn:hover {
+            color: #b91c1c;
+            transform: scale(1.3);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="main-card">
-        <h1 class="text-center">🌟 Healt <small style="font-size: 0.5em; color: #666;">v2.3</small></h1>
+        <h1 class="text-center">🌟 Healt <small style="font-size: 0.5em; color: #666;">v2.4</small></h1>
 
-        <!-- Stats, Form, Trends sections unchanged -->
+        <!-- Stats, Form, Trends unchanged -->
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="stat-pill">
@@ -223,8 +240,7 @@
         <div class="mt-5">
             <h4 class="mb-3">📊 History</h4>
             <div class="table-responsive">
-                <div class="table-container position-relative">
-                    <div class="table-scroll-hint">← Scroll →</div>
+                <div class="table-container" id="tableContainer">
                     <table class="table table-hover mb-0 history-table">
                         <thead class="table-dark">
                             <tr>
@@ -253,7 +269,6 @@
 </div>
 
 <script>
-    // All your existing script remains exactly the same – only the table class changed to "history-table"
     const STORAGE_KEY = 'healtData';
     let healthData = loadData();
     const today = new Date().toISOString().split('T')[0];
@@ -278,6 +293,7 @@
 
     document.getElementById('date').value = today;
 
+    // Rest of your script unchanged (form, delete, charts, etc.)
     document.getElementById('healthForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const newEntry = {
@@ -324,6 +340,7 @@
         renderTable();
         renderCharts();
         updateStats();
+        updateScrollIndicator();
     }
 
     function updateStats() {
@@ -391,6 +408,17 @@
         });
     }
 
+    // Add scroll indicator class
+    function updateScrollIndicator() {
+        const container = document.querySelector('.table-responsive');
+        const tableContainer = document.getElementById('tableContainer');
+        if (container.scrollWidth > container.clientWidth) {
+            tableContainer.classList.add('scrollable');
+        } else {
+            tableContainer.classList.remove('scrollable');
+        }
+    }
+
     function loadData() {
         const data = localStorage.getItem(STORAGE_KEY);
         return data ? JSON.parse(data) : [];
@@ -400,7 +428,10 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(healthData));
     }
 
-    window.onload = refreshUI;
+    window.onload = function() {
+        refreshUI();
+        updateScrollIndicator();
+    };
 
     document.getElementById('archiveBtn').addEventListener('click', function() {
         const headers = "Date,Sugar,HbA1c,SBP,DBP,MAP,Pulse,Weight,Avg Weight,Blood O2\n";
@@ -414,6 +445,6 @@
     });
 </script>
 </body>
-</html>
+</html
 
 
