@@ -4,21 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Healt - Fun Health Tracker</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💚</text></svg>">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    
     <style>
         :root {
             --primary-green: #4caf50;
             --dark-green: #2e7d32;
-            --bg-grad: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         }
 
         body {
-            background: var(--bg-grad);
+            background: var(--bg-gradient);
             background-attachment: fixed;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: #1a2f1b;
@@ -73,59 +74,10 @@
             margin-bottom: 20px;
         }
 
-        /* --- FIX START: MOBILE SCROLLING --- */
         .table-container {
             border-radius: 15px;
-            overflow-x: auto; /* Enable horizontal scroll */
-            overflow-y: hidden;
+            overflow: hidden;
             border: 1px solid #e2e8f0;
-            position: relative;
-            background: white;
-            -webkit-overflow-scrolling: touch; /* Smooth scroll for iOS */
-        }
-
-        .history-table {
-            min-width: 850px; /* Ensure table is wide enough for all data */
-            width: 100%;
-            margin-bottom: 0;
-        }
-        /* --- FIX END --- */
-
-        .history-table th,
-        .history-table td {
-            white-space: nowrap;
-            text-align: center;
-            vertical-align: middle;
-            padding: 12px 15px;
-        }
-
-        @media (max-width: 768px) {
-            .history-table {
-                font-size: 0.85rem;
-            }
-            .main-card {
-                padding: 1rem;
-                margin-top: 1rem;
-            }
-            .scroll-hint {
-                display: block;
-                text-align: right;
-                font-size: 0.7rem;
-                color: var(--primary-green);
-                margin-bottom: 5px;
-            }
-        }
-
-        @media (min-width: 769px) {
-            .scroll-hint { display: none; }
-        }
-
-        .table thead th {
-            position: sticky;
-            top: 0;
-            background: #212529;
-            color: white;
-            z-index: 10;
         }
 
         .today-row {
@@ -133,24 +85,15 @@
             border-left: 5px solid var(--primary-green);
         }
 
-        .delete-btn {
-            color: #ef4444;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 1.1rem;
-        }
-
-        .delete-btn:hover {
-            color: #b91c1c;
-            transform: scale(1.3);
-        }
+        .delete-btn { color: #ef4444; cursor: pointer; transition: 0.2s; }
+        .delete-btn:hover { color: #b91c1c; transform: scale(1.2); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="main-card">
-        <h1 class="text-center">🌟 Healt <small style="font-size: 0.5em; color: #666;">v2.4</small></h1>
+        <h1>🌟 Healt <small style="font-size: 0.5em; color: #666; -webkit-text-fill-color: #666;">v2.1</small></h1>
 
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
@@ -161,7 +104,7 @@
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-pill">
-                    <small class="text-muted">Current HbA1c</small>
+                    <small class="text-muted">Average HbA1c</small>
                     <div class="h4 mb-0" id="stat-hba1c">-</div>
                 </div>
             </div>
@@ -202,24 +145,18 @@
                     <div class="row g-2">
                         <div class="col-6 mb-2">
                             <label class="small fw-bold">SBP</label>
-                            <input type="number" class="form-control form-control-sm" id="sbp" required>
+                            <input type="number" class="form-control form-control-sm" id="sbp" placeholder="120" required>
                         </div>
                         <div class="col-6 mb-2">
                             <label class="small fw-bold">DBP</label>
-                            <input type="number" class="form-control form-control-sm" id="dbp" required>
+                            <input type="number" class="form-control form-control-sm" id="dbp" placeholder="80" required>
                         </div>
                     </div>
-                    <div class="row g-2">
-                        <div class="col-6 mb-2">
-                            <label class="small fw-bold">Pulse (bpm)</label>
-                            <input type="number" class="form-control form-control-sm" id="pulse" placeholder="e.g. 72" required>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <label class="small fw-bold">Blood O2</label>
-                            <input type="number" step="0.01" min="0.8" max="1" class="form-control form-control-sm" id="bloodO2" required>
-                        </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Blood O2 (e.g. 0.98)</label>
+                        <input type="number" step="0.01" min="0.8" max="1" class="form-control form-control-sm" id="bloodO2" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 mt-2">Add Data 🎉</button>
+                    <button type="submit" class="btn btn-primary w-100">Add Data 🎉</button>
                 </form>
             </div>
 
@@ -230,23 +167,20 @@
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="hba1cChart"></canvas></div></div>
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="weightChart"></canvas></div></div>
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="bpChart"></canvas></div></div>
-                    <div class="col-md-6"><div class="chart-wrapper"><canvas id="pulseChart"></canvas></div></div>
                 </div>
             </div>
         </div>
 
         <div class="mt-5">
-            <h4 class="mb-1">📊 History</h4>
-            <div class="scroll-hint"><i class="bi bi-arrow-left-right"></i> Swipe to see more</div>
-            <div class="table-container" id="tableContainer">
-                <table class="table table-hover mb-0 history-table">
+            <h4 class="mb-3">📊 History</h4>
+            <div class="table-responsive table-container">
+                <table class="table table-hover mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Date</th>
                             <th>Sugar</th>
                             <th>HbA1c</th>
                             <th>BP (MAP)</th>
-                            <th>Pulse</th>
                             <th>Weight</th>
                             <th>O2</th>
                             <th></th>
@@ -268,7 +202,7 @@
 <script>
     const STORAGE_KEY = 'healtData';
     let healthData = loadData();
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().slice(0, 10); 
 
     function formatFullDate(dateStr) {
         const date = new Date(dateStr + 'T00:00:00');
@@ -282,8 +216,8 @@
 
     if (healthData.length === 0) {
         healthData = [
-            { date: '2026-01-01', sugar: 9.0, hba1c: 7.46, sbp: 130, dbp: 70, map: 90, weight: 69.0, avg_weight: 69.0, bloodO2: 0.95, pulse: 72 },
-            { date: '2026-01-02', sugar: 9.7, hba1c: 7.65, sbp: 132, dbp: 72, map: 91, weight: 68.7, avg_weight: 68.85, bloodO2: 0.93, pulse: 74 }
+            { date: '2026-01-01', sugar: 9.0, hba1c: 7.46, sbp: 130, dbp: 70, map: 90, weight: 69.0, avg_weight: 69.0, bloodO2: 0.95 },
+            { date: '2026-01-02', sugar: 9.7, hba1c: 7.65, sbp: 132, dbp: 72, map: 91, weight: 68.7, avg_weight: 68.85, bloodO2: 0.93 }
         ];
         saveData();
     }
@@ -298,8 +232,7 @@
             sbp: parseInt(document.getElementById('sbp').value),
             dbp: parseInt(document.getElementById('dbp').value),
             weight: parseFloat(document.getElementById('weight').value),
-            bloodO2: parseFloat(document.getElementById('bloodO2').value),
-            pulse: parseInt(document.getElementById('pulse').value) || 0
+            bloodO2: parseFloat(document.getElementById('bloodO2').value)
         };
 
         newEntry.hba1c = parseFloat(((newEntry.sugar + 2.59) / 1.59).toFixed(2));
@@ -341,8 +274,13 @@
     function updateStats() {
         if(healthData.length === 0) return;
         const last = healthData[healthData.length - 1];
+        
+        // Calculate Global Average HbA1c
+        const avgHbA1c = (healthData.reduce((sum, entry) => sum + entry.hba1c, 0) / healthData.length).toFixed(2);
+
         document.getElementById('stat-sugar').innerText = last.sugar;
-        document.getElementById('stat-hba1c').innerText = last.hba1c + '%';
+        // UPDATED: Now shows the average across all entries
+        document.getElementById('stat-hba1c').innerText = avgHbA1c + '%';
         document.getElementById('stat-weight').innerText = last.avg_weight + 'kg';
         document.getElementById('stat-bp').innerText = `${last.sbp}/${last.dbp}`;
     }
@@ -358,7 +296,6 @@
                 <td>${entry.sugar}</td>
                 <td class="text-muted">${entry.hba1c}</td>
                 <td>${entry.sbp}/${entry.dbp} <small>(${entry.map})</small></td>
-                <td>${entry.pulse || '-'}<small>bpm</small></td>
                 <td>${entry.weight} <small class="text-muted">(${entry.avg_weight})</small></td>
                 <td>${(entry.bloodO2 * 100).toFixed(0)}%</td>
                 <td><i class="bi bi-trash3 delete-btn" onclick="deleteEntry(${index})"></i></td>
@@ -380,15 +317,14 @@
             }
         });
 
-        ['sugarChart', 'hba1cChart', 'weightChart', 'bpChart', 'pulseChart'].forEach(id => {
-            let chart = Chart.getChart(id);
-            if (chart) chart.destroy();
+        ['sugarChart', 'hba1cChart', 'weightChart', 'bpChart'].forEach(id => {
+            let chartStatus = Chart.getChart(id);
+            if (chartStatus) chartStatus.destroy();
         });
 
         new Chart(document.getElementById('sugarChart'), config('Sugar', healthData.map(e => e.sugar), '#ef4444', 'Sugar Levels'));
         new Chart(document.getElementById('hba1cChart'), config('HbA1c', healthData.map(e => e.hba1c), '#f59e0b', 'Estimated HbA1c'));
         new Chart(document.getElementById('weightChart'), config('Weight', healthData.map(e => e.weight), '#3b82f6', 'Weight Trend'));
-        new Chart(document.getElementById('pulseChart'), config('Pulse', healthData.map(e => e.pulse || 0), '#8b5cf6', 'Pulse Rate ❤️'));
         
         new Chart(document.getElementById('bpChart'), {
             type: 'line',
@@ -412,23 +348,20 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(healthData));
     }
 
-    window.onload = function() {
-        refreshUI();
-    };
+    window.onload = refreshUI;
 
     document.getElementById('archiveBtn').addEventListener('click', function() {
-        const headers = "Date,Sugar,HbA1c,SBP,DBP,MAP,Pulse,Weight,Avg Weight,Blood O2\n";
-        const rows = healthData.map(e => `${e.date},${e.sugar},${e.hba1c},${e.sbp},${e.dbp},${e.map},${e.pulse || ''},${e.weight},${e.avg_weight},${e.bloodO2}`).join("\n");
+        const headers = "Date,Sugar,HbA1c,SBP,DBP,MAP,Weight,Avg Weight,Blood O2\n";
+        const rows = healthData.map(e => `${e.date},${e.sugar},${e.hba1c},${e.sbp},${e.dbp},${e.map},${e.weight},${e.avg_weight},${e.bloodO2}`).join("\n");
         const link = document.createElement("a");
         link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + headers + rows));
-        link.setAttribute("download", `healt_export_${today}.csv`);
-        document.body.appendChild(link);
+        link.setAttribute("download", `healt_export_${new Date().toISOString().slice(0,10)}.csv`);
         link.click();
-        document.body.removeChild(link);
     });
 </script>
 </body>
-</html>>
+</html>
+
 
 
 
