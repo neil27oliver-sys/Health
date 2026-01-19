@@ -4,22 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Healt - Fun Health Tracker</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💚</text></svg>">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <style>
         :root {
             --primary-green: #4caf50;
             --dark-green: #2e7d32;
-            --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            --bg-grad: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         }
 
         body {
-            background: var(--bg-gradient);
+            background: var(--bg-grad);
             background-attachment: fixed;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: #1a2f1b;
@@ -76,8 +75,22 @@
 
         .table-container {
             border-radius: 15px;
-            overflow: hidden;
+            overflow-x: auto;
             border: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .history-table {
+            min-width: 800px;
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .history-table th, .history-table td {
+            white-space: nowrap;
+            text-align: center;
+            vertical-align: middle;
+            padding: 12px;
         }
 
         .today-row {
@@ -93,7 +106,7 @@
 
 <div class="container">
     <div class="main-card">
-        <h1>🌟 Healt <small style="font-size: 0.5em; color: #666; -webkit-text-fill-color: #666;">v2.1</small></h1>
+        <h1>🌟 Healt <small style="font-size: 0.5em; color: #666;">v2.2</small></h1>
 
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
@@ -116,7 +129,7 @@
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-pill">
-                    <small class="text-muted">Last BP</small>
+                    <small class="text-muted">Last BP/Pulse</small>
                     <div class="h4 mb-0" id="stat-bp">-</div>
                 </div>
             </div>
@@ -145,18 +158,24 @@
                     <div class="row g-2">
                         <div class="col-6 mb-2">
                             <label class="small fw-bold">SBP</label>
-                            <input type="number" class="form-control form-control-sm" id="sbp" placeholder="120" required>
+                            <input type="number" class="form-control form-control-sm" id="sbp" required>
                         </div>
                         <div class="col-6 mb-2">
                             <label class="small fw-bold">DBP</label>
-                            <input type="number" class="form-control form-control-sm" id="dbp" placeholder="80" required>
+                            <input type="number" class="form-control form-control-sm" id="dbp" required>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="small fw-bold">Blood O2 (e.g. 0.98)</label>
-                        <input type="number" step="0.01" min="0.8" max="1" class="form-control form-control-sm" id="bloodO2" required>
+                    <div class="row g-2">
+                        <div class="col-6 mb-2">
+                            <label class="small fw-bold">Pulse (bpm)</label>
+                            <input type="number" class="form-control form-control-sm" id="pulse" placeholder="e.g. 72" required>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="small fw-bold">Blood O2</label>
+                            <input type="number" step="0.01" min="0.8" max="1" class="form-control form-control-sm" id="bloodO2" required>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Add Data 🎉</button>
+                    <button type="submit" class="btn btn-primary w-100 mt-2">Add Data 🎉</button>
                 </form>
             </div>
 
@@ -167,20 +186,22 @@
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="hba1cChart"></canvas></div></div>
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="weightChart"></canvas></div></div>
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="bpChart"></canvas></div></div>
+                    <div class="col-md-12"><div class="chart-wrapper"><canvas id="pulseChart"></canvas></div></div>
                 </div>
             </div>
         </div>
 
         <div class="mt-5">
             <h4 class="mb-3">📊 History</h4>
-            <div class="table-responsive table-container">
-                <table class="table table-hover mb-0">
+            <div class="table-container">
+                <table class="table table-hover history-table">
                     <thead class="table-dark">
                         <tr>
                             <th>Date</th>
                             <th>Sugar</th>
                             <th>HbA1c</th>
                             <th>BP (MAP)</th>
+                            <th>Pulse</th>
                             <th>Weight</th>
                             <th>O2</th>
                             <th></th>
@@ -192,8 +213,6 @@
         </div>
 
         <div class="mt-5 text-center p-4 bg-light rounded-4">
-            <h5>🗄️ Backup Your Data</h5>
-            <p class="text-muted small">Keep a copy of your health journey safely stored.</p>
             <button id="archiveBtn" class="btn btn-outline-secondary">Archive & Download CSV 📥</button>
         </div>
     </div>
@@ -202,22 +221,17 @@
 <script>
     const STORAGE_KEY = 'healtData';
     let healthData = loadData();
-    const today = new Date().toISOString().slice(0, 10); 
+    const today = new Date().toISOString().slice(0, 10);
 
     function formatFullDate(dateStr) {
         const date = new Date(dateStr + 'T00:00:00');
         return date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
     }
 
-    function formatChartDate(dateStr) {
-        const date = new Date(dateStr + 'T00:00:00');
-        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-    }
-
     if (healthData.length === 0) {
         healthData = [
-            { date: '2026-01-01', sugar: 9.0, hba1c: 7.46, sbp: 130, dbp: 70, map: 90, weight: 69.0, avg_weight: 69.0, bloodO2: 0.95 },
-            { date: '2026-01-02', sugar: 9.7, hba1c: 7.65, sbp: 132, dbp: 72, map: 91, weight: 68.7, avg_weight: 68.85, bloodO2: 0.93 }
+            { date: '2026-01-01', sugar: 9.0, hba1c: 7.46, sbp: 130, dbp: 70, map: 90, weight: 69.0, avg_weight: 69.0, bloodO2: 0.95, pulse: 72 },
+            { date: '2026-01-02', sugar: 9.7, hba1c: 7.65, sbp: 132, dbp: 72, map: 91, weight: 68.7, avg_weight: 68.85, bloodO2: 0.93, pulse: 75 }
         ];
         saveData();
     }
@@ -232,7 +246,8 @@
             sbp: parseInt(document.getElementById('sbp').value),
             dbp: parseInt(document.getElementById('dbp').value),
             weight: parseFloat(document.getElementById('weight').value),
-            bloodO2: parseFloat(document.getElementById('bloodO2').value)
+            bloodO2: parseFloat(document.getElementById('bloodO2').value),
+            pulse: parseInt(document.getElementById('pulse').value)
         };
 
         newEntry.hba1c = parseFloat(((newEntry.sugar + 2.59) / 1.59).toFixed(2));
@@ -274,15 +289,12 @@
     function updateStats() {
         if(healthData.length === 0) return;
         const last = healthData[healthData.length - 1];
-        
-        // Calculate Global Average HbA1c
         const avgHbA1c = (healthData.reduce((sum, entry) => sum + entry.hba1c, 0) / healthData.length).toFixed(2);
 
         document.getElementById('stat-sugar').innerText = last.sugar;
-        // UPDATED: Now shows the average across all entries
         document.getElementById('stat-hba1c').innerText = avgHbA1c + '%';
         document.getElementById('stat-weight').innerText = last.avg_weight + 'kg';
-        document.getElementById('stat-bp').innerText = `${last.sbp}/${last.dbp}`;
+        document.getElementById('stat-bp').innerText = `${last.sbp}/${last.dbp} (${last.pulse})`;
     }
 
     function renderTable() {
@@ -296,6 +308,7 @@
                 <td>${entry.sugar}</td>
                 <td class="text-muted">${entry.hba1c}</td>
                 <td>${entry.sbp}/${entry.dbp} <small>(${entry.map})</small></td>
+                <td class="fw-bold">${entry.pulse || '-'}</td>
                 <td>${entry.weight} <small class="text-muted">(${entry.avg_weight})</small></td>
                 <td>${(entry.bloodO2 * 100).toFixed(0)}%</td>
                 <td><i class="bi bi-trash3 delete-btn" onclick="deleteEntry(${index})"></i></td>
@@ -305,62 +318,48 @@
     }
 
     function renderCharts() {
-        const chartLabels = healthData.map(e => formatChartDate(e.date));
+        const labels = healthData.map(e => e.date.split('-').slice(1).reverse().join('/'));
         const config = (label, data, color, title) => ({
             type: 'line',
-            data: { labels: chartLabels, datasets: [{ label, data, borderColor: color, backgroundColor: color + '22', fill: true, tension: 0.4 }] },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { legend: { display: false }, title: { display: true, text: title } },
-                scales: { y: { beginAtZero: false } }
-            }
+            data: { labels, datasets: [{ label, data, borderColor: color, backgroundColor: color + '22', fill: true, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: title }, legend: {display: false} } }
         });
 
-        ['sugarChart', 'hba1cChart', 'weightChart', 'bpChart'].forEach(id => {
-            let chartStatus = Chart.getChart(id);
-            if (chartStatus) chartStatus.destroy();
+        ['sugarChart', 'hba1cChart', 'weightChart', 'bpChart', 'pulseChart'].forEach(id => {
+            let c = Chart.getChart(id); if (c) c.destroy();
         });
 
         new Chart(document.getElementById('sugarChart'), config('Sugar', healthData.map(e => e.sugar), '#ef4444', 'Sugar Levels'));
-        new Chart(document.getElementById('hba1cChart'), config('HbA1c', healthData.map(e => e.hba1c), '#f59e0b', 'Estimated HbA1c'));
+        new Chart(document.getElementById('hba1cChart'), config('HbA1c', healthData.map(e => e.hba1c), '#f59e0b', 'HbA1c Trend'));
         new Chart(document.getElementById('weightChart'), config('Weight', healthData.map(e => e.weight), '#3b82f6', 'Weight Trend'));
+        new Chart(document.getElementById('pulseChart'), config('Pulse', healthData.map(e => e.pulse), '#ec4899', 'Pulse Rate (BPM)'));
         
         new Chart(document.getElementById('bpChart'), {
             type: 'line',
-            data: {
-                labels: chartLabels,
-                datasets: [
-                    { label: 'SBP', data: healthData.map(e => e.sbp), borderColor: '#ef4444', tension: 0.4 },
-                    { label: 'DBP', data: healthData.map(e => e.dbp), borderColor: '#3b82f6', tension: 0.4 }
-                ]
-            },
+            data: { labels, datasets: [
+                { label: 'SBP', data: healthData.map(e => e.sbp), borderColor: '#ef4444', tension: 0.4 },
+                { label: 'DBP', data: healthData.map(e => e.dbp), borderColor: '#3b82f6', tension: 0.4 }
+            ]},
             options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Blood Pressure' } } }
         });
     }
 
-    function loadData() {
-        const data = localStorage.getItem(STORAGE_KEY);
-        return data ? JSON.parse(data) : [];
-    }
-
-    function saveData() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(healthData));
-    }
-
+    function loadData() { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(healthData)); }
     window.onload = refreshUI;
 
     document.getElementById('archiveBtn').addEventListener('click', function() {
-        const headers = "Date,Sugar,HbA1c,SBP,DBP,MAP,Weight,Avg Weight,Blood O2\n";
-        const rows = healthData.map(e => `${e.date},${e.sugar},${e.hba1c},${e.sbp},${e.dbp},${e.map},${e.weight},${e.avg_weight},${e.bloodO2}`).join("\n");
+        const headers = "Date,Sugar,HbA1c,SBP,DBP,Pulse,Weight,Blood O2\n";
+        const rows = healthData.map(e => `${e.date},${e.sugar},${e.hba1c},${e.sbp},${e.dbp},${e.pulse},${e.weight},${e.bloodO2}`).join("\n");
         const link = document.createElement("a");
         link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + headers + rows));
-        link.setAttribute("download", `healt_export_${new Date().toISOString().slice(0,10)}.csv`);
+        link.setAttribute("download", `health_export.csv`);
         link.click();
     });
 </script>
 </body>
 </html>
+
 
 
 
