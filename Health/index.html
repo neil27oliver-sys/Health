@@ -46,12 +46,47 @@
 
         .stat-pill:hover { transform: translateY(-5px); }
 
-        h1 {
+        .header-container {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-top: 1rem;
+        }
+
+        .header-box {
+            display: inline-block;
+            padding: 14px 40px;
+            background: rgba(76, 175, 80, 0.06);
+            border-radius: 20px;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            box-shadow: 0 4px 16px rgba(76, 175, 80, 0.08);
+        }
+
+        .header-title {
+            font-size: 2.6rem;
             font-weight: 800;
-            background: linear-gradient(45deg, var(--dark-green), var(--primary-green));
+            margin: 0;
+            background: linear-gradient(90deg, #2e7d32, #4caf50, #66bb6a);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1.5rem;
+            line-height: 1;
+        }
+
+        .header-version {
+            font-size: 0.45em;
+            vertical-align: super;
+            color: #2e7d32;
+            font-weight: 600;
+            margin-left: 10px;
+            opacity: 0.9;
+        }
+
+        .header-underline {
+            height: 4px;
+            width: 160px;
+            margin: 10px auto 0;
+            background: linear-gradient(90deg, transparent, #4caf50 30%, #4caf50 70%, transparent);
+            border-radius: 4px;
         }
 
         .btn-primary {
@@ -106,7 +141,17 @@
 
 <div class="container">
     <div class="main-card">
-        <h1>🌟 Healt <small style="font-size: 0.5em; color: #666;">v2.3</small></h1>
+
+        <!-- Updated heading only – everything else unchanged -->
+        <div class="header-container">
+            <div class="header-box">
+                <h1 class="header-title">
+                    🍀 Heal<span style="color: #4caf50;">t</span>
+                    <small class="header-version">v2.3</small>
+                </h1>
+            </div>
+            <div class="header-underline"></div>
+        </div>
 
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
@@ -250,7 +295,6 @@
         return date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
     }
 
-    // Sample data if empty
     if (healthData.length === 0) {
         healthData = [
             { date: '2026-01-01', sugar: 9.0, hba1c: 7.46, sbp: 130, dbp: 70, map: 90, weight: 69.0, avg_weight: 69.0, bloodO2: 95, pulse: 72 },
@@ -376,7 +420,6 @@
 
     function loadData() { 
         const data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-        // Convert old bloodO2 (0-1) to % if needed
         return data.map(item => ({
             ...item,
             bloodO2: item.bloodO2 < 1 ? item.bloodO2 * 100 : item.bloodO2
