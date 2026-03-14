@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Healt - Fun Health Tracker</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💚</text></svg>">
+    <title>Healt - Diabetes Health Tracker</title>
+    <link rel="icon" type="image/png" href="assets/healt.png">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -106,7 +106,7 @@
 
 <div class="container">
     <div class="main-card">
-        <h1>🌟 Healt <small style="font-size: 0.5em; color: #666;">v2.2</small></h1>
+        <h1>🌟 Healt <small style="font-size: 0.5em; color: #666;">v2.3</small></h1>
 
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
@@ -131,6 +131,18 @@
                 <div class="stat-pill">
                     <small class="text-muted">Last BP/Pulse</small>
                     <div class="h4 mb-0" id="stat-bp">-</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-pill">
+                    <small class="text-muted">Avg Blood O2</small>
+                    <div class="h4 mb-0" id="stat-avg-o2">-</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-pill">
+                    <small class="text-muted">Avg MAP</small>
+                    <div class="h4 mb-0" id="stat-avg-map">-</div>
                 </div>
             </div>
         </div>
@@ -171,12 +183,21 @@
                             <input type="number" class="form-control form-control-sm" id="pulse" placeholder="e.g. 72" required>
                         </div>
                         <div class="col-6 mb-2">
-                            <label class="small fw-bold">Blood O2</label>
-                            <input type="number" step="0.01" min="0.8" max="1" class="form-control form-control-sm" id="bloodO2" required>
+                            <label class="small fw-bold">Blood O2 (%)</label>
+                            <input type="number" step="0.1" min="80" max="100" class="form-control form-control-sm" id="bloodO2" placeholder="e.g. 97" required>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100 mt-2">Add Data 🎉</button>
                 </form>
+
+                <div class="mt-4 p-3 bg-light rounded-4">
+                    <h6>Mean Arterial Pressure (MAP)</h6>
+                    <small class="text-muted">
+                        MAP is the average arterial pressure during one heartbeat.<br>
+                        It’s a better indicator of organ perfusion than systolic alone.<br>
+                        Formula: DBP + (SBP − DBP)/3 ≈ (2×DBP + SBP)/3
+                    </small>
+                </div>
             </div>
 
             <div class="col-lg-8">
@@ -186,7 +207,8 @@
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="hba1cChart"></canvas></div></div>
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="weightChart"></canvas></div></div>
                     <div class="col-md-6"><div class="chart-wrapper"><canvas id="bpChart"></canvas></div></div>
-                    <div class="col-md-12"><div class="chart-wrapper"><canvas id="pulseChart"></canvas></div></div>
+                    <div class="col-md-6"><div class="chart-wrapper"><canvas id="pulseChart"></canvas></div></div>
+                    <div class="col-md-6"><div class="chart-wrapper"><canvas id="o2Chart"></canvas></div></div>
                 </div>
             </div>
         </div>
@@ -228,10 +250,11 @@
         return date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
     }
 
+    // Sample data if empty
     if (healthData.length === 0) {
         healthData = [
-            { date: '2026-01-01', sugar: 9.0, hba1c: 7.46, sbp: 130, dbp: 70, map: 90, weight: 69.0, avg_weight: 69.0, bloodO2: 0.95, pulse: 72 },
-            { date: '2026-01-02', sugar: 9.7, hba1c: 7.65, sbp: 132, dbp: 72, map: 91, weight: 68.7, avg_weight: 68.85, bloodO2: 0.93, pulse: 75 }
+            { date: '2026-01-01', sugar: 9.0, hba1c: 7.46, sbp: 130, dbp: 70, map: 90, weight: 69.0, avg_weight: 69.0, bloodO2: 95, pulse: 72 },
+            { date: '2026-01-02', sugar: 9.7, hba1c: 7.65, sbp: 132, dbp: 72, map: 92, weight: 68.7, avg_weight: 68.85, bloodO2: 93, pulse: 75 }
         ];
         saveData();
     }
@@ -251,19 +274,19 @@
         };
 
         newEntry.hba1c = parseFloat(((newEntry.sugar + 2.59) / 1.59).toFixed(2));
-        newEntry.map = Math.round(newEntry.dbp + (newEntry.sbp - newEntry.dbp) / 3);
+        newEntry.map   = Math.round(newEntry.dbp + (newEntry.sbp - newEntry.dbp) / 3);
 
         healthData.push(newEntry);
         healthData.sort((a, b) => a.date.localeCompare(b.date));
         
-        recalculateAvgWeight();
+        recalculateAverages();
         saveData();
         refreshUI();
         this.reset();
         document.getElementById('date').value = today;
     });
 
-    function recalculateAvgWeight() {
+    function recalculateAverages() {
         let totalWeight = 0;
         healthData.forEach((entry, i) => {
             totalWeight += entry.weight;
@@ -274,7 +297,7 @@
     function deleteEntry(index) {
         if (confirm('Delete this record?')) {
             healthData.splice(index, 1);
-            recalculateAvgWeight();
+            recalculateAverages();
             saveData();
             refreshUI();
         }
@@ -287,14 +310,19 @@
     }
 
     function updateStats() {
-        if(healthData.length === 0) return;
-        const last = healthData[healthData.length - 1];
-        const avgHbA1c = (healthData.reduce((sum, entry) => sum + entry.hba1c, 0) / healthData.length).toFixed(2);
+        if (healthData.length === 0) return;
 
-        document.getElementById('stat-sugar').innerText = last.sugar;
-        document.getElementById('stat-hba1c').innerText = avgHbA1c + '%';
-        document.getElementById('stat-weight').innerText = last.avg_weight + 'kg';
-        document.getElementById('stat-bp').innerText = `${last.sbp}/${last.dbp} (${last.pulse})`;
+        const last = healthData[healthData.length - 1];
+        const avgHbA1c   = (healthData.reduce((sum, e) => sum + e.hba1c,   0) / healthData.length).toFixed(2);
+        const avgO2      = (healthData.reduce((sum, e) => sum + e.bloodO2, 0) / healthData.length).toFixed(1);
+        const avgMAP     = (healthData.reduce((sum, e) => sum + e.map,     0) / healthData.length).toFixed(0);
+
+        document.getElementById('stat-sugar').innerText    = last.sugar;
+        document.getElementById('stat-hba1c').innerText    = avgHbA1c + '%';
+        document.getElementById('stat-weight').innerText   = last.avg_weight + ' kg';
+        document.getElementById('stat-bp').innerText       = `${last.sbp}/${last.dbp} (${last.pulse})`;
+        document.getElementById('stat-avg-o2').innerText   = avgO2 + '%';
+        document.getElementById('stat-avg-map').innerText  = avgMAP + ' mmHg';
     }
 
     function renderTable() {
@@ -310,7 +338,7 @@
                 <td>${entry.sbp}/${entry.dbp} <small>(${entry.map})</small></td>
                 <td class="fw-bold">${entry.pulse || '-'}</td>
                 <td>${entry.weight} <small class="text-muted">(${entry.avg_weight})</small></td>
-                <td>${(entry.bloodO2 * 100).toFixed(0)}%</td>
+                <td>${entry.bloodO2.toFixed(1)}%</td>
                 <td><i class="bi bi-trash3 delete-btn" onclick="deleteEntry(${index})"></i></td>
             `;
             tbody.appendChild(row);
@@ -325,35 +353,50 @@
             options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: title }, legend: {display: false} } }
         });
 
-        ['sugarChart', 'hba1cChart', 'weightChart', 'bpChart', 'pulseChart'].forEach(id => {
+        ['sugarChart', 'hba1cChart', 'weightChart', 'bpChart', 'pulseChart', 'o2Chart'].forEach(id => {
             let c = Chart.getChart(id); if (c) c.destroy();
         });
 
-        new Chart(document.getElementById('sugarChart'), config('Sugar', healthData.map(e => e.sugar), '#ef4444', 'Sugar Levels'));
-        new Chart(document.getElementById('hba1cChart'), config('HbA1c', healthData.map(e => e.hba1c), '#f59e0b', 'HbA1c Trend'));
-        new Chart(document.getElementById('weightChart'), config('Weight', healthData.map(e => e.weight), '#3b82f6', 'Weight Trend'));
-        new Chart(document.getElementById('pulseChart'), config('Pulse', healthData.map(e => e.pulse), '#ec4899', 'Pulse Rate (BPM)'));
-        
+        new Chart(document.getElementById('sugarChart'),  config('Sugar',    healthData.map(e => e.sugar),    '#ef4444', 'Sugar Levels'));
+        new Chart(document.getElementById('hba1cChart'),  config('HbA1c',    healthData.map(e => e.hba1c),    '#f59e0b', 'HbA1c Trend'));
+        new Chart(document.getElementById('weightChart'), config('Weight',   healthData.map(e => e.weight),   '#3b82f6', 'Weight Trend'));
+        new Chart(document.getElementById('pulseChart'),  config('Pulse',    healthData.map(e => e.pulse),    '#ec4899', 'Pulse Rate (BPM)'));
+        new Chart(document.getElementById('o2Chart'),     config('SpO2',     healthData.map(e => e.bloodO2),  '#10b981', 'Blood Oxygen (%)'));
+
         new Chart(document.getElementById('bpChart'), {
             type: 'line',
             data: { labels, datasets: [
-                { label: 'SBP', data: healthData.map(e => e.sbp), borderColor: '#ef4444', tension: 0.4 },
-                { label: 'DBP', data: healthData.map(e => e.dbp), borderColor: '#3b82f6', tension: 0.4 }
+                { label: 'SBP', data: healthData.map(e => e.sbp),   borderColor: '#ef4444', tension: 0.4 },
+                { label: 'DBP', data: healthData.map(e => e.dbp),   borderColor: '#3b82f6', tension: 0.4 },
+                { label: 'MAP', data: healthData.map(e => e.map),   borderColor: '#8b5cf6', tension: 0.4, borderDash: [5, 3] }
             ]},
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Blood Pressure' } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Blood Pressure & MAP' } } }
         });
     }
 
-    function loadData() { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-    function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(healthData)); }
+    function loadData() { 
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        // Convert old bloodO2 (0-1) to % if needed
+        return data.map(item => ({
+            ...item,
+            bloodO2: item.bloodO2 < 1 ? item.bloodO2 * 100 : item.bloodO2
+        }));
+    }
+
+    function saveData() { 
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(healthData)); 
+    }
+
     window.onload = refreshUI;
 
     document.getElementById('archiveBtn').addEventListener('click', function() {
-        const headers = "Date,Sugar,HbA1c,SBP,DBP,Pulse,Weight,Blood O2\n";
-        const rows = healthData.map(e => `${e.date},${e.sugar},${e.hba1c},${e.sbp},${e.dbp},${e.pulse},${e.weight},${e.bloodO2}`).join("\n");
+        const headers = "Date,Sugar,HbA1c,SBP,DBP,MAP,Pulse,Weight,AvgWeight,BloodO2\n";
+        const rows = healthData.map(e => 
+            `${e.date},${e.sugar},${e.hba1c},${e.sbp},${e.dbp},${e.map},${e.pulse},${e.weight},${e.avg_weight},${e.bloodO2}`
+        ).join("\n");
         const link = document.createElement("a");
         link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + headers + rows));
-        link.setAttribute("download", `health_export.csv`);
+        link.setAttribute("download", `healt_export_${new Date().toISOString().slice(0,10)}.csv`);
         link.click();
     });
 </script>
